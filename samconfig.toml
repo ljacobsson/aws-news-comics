@@ -1,0 +1,9 @@
+version = 0.1
+[default.deploy.parameters]
+stack_name = "aws-news-comics"
+resolve_s3 = true
+s3_prefix = "aws-news-comics"
+region = "eu-west-1"
+profile = "dev"
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
