@@ -1,4 +1,23 @@
-Bot that creates comic strips from the latest service announcements from AWS and posts them on X
+## aws-news-comics
+Bot that creates comic strips from the latest service announcements from AWS and posts them on X.
+
+## Usage
+Create an SSM Parameter Store SecretString named `/news-comics/tokens` with the following content:
+```
+{
+    "appKey": "<Your Twitter app key>",
+    "appSecret":  "<Your Twitter app secret>",
+    "accessToken": "<Your Twitter access token>",
+    "accessSecret": "<Your Twitter access secret key>",
+    "openaiKey": "<Your OpenAI key>"
+}
+```
+
+## Deploy
+```
+$ sam build && sam deploy --guided
+```
+
 
 ![diagram](./image.png)
 
