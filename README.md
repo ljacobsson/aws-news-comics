@@ -21,6 +21,7 @@ $ sam build && sam deploy --guided
 ## Architecture
 ![diagram](./image.png)
 
+## Result
 ![image](https://github.com/ljacobsson/aws-news-comics/assets/7579097/4a35deff-8fdb-47af-9cba-1b1bf848cdae)
 ![image](https://github.com/ljacobsson/aws-news-comics/assets/7579097/7aeb9ae9-9402-4823-9f71-5fbc7eed8caf)
 
