@@ -4,6 +4,7 @@ Transform:
 Globals:
   Function:
     Timeout: 60
+    Runtime: nodejs20.x
     MemorySize: 1024
 Resources:
   RSSReader:
@@ -11,7 +12,6 @@ Resources:
     Properties:
       CodeUri: .
       Handler: src/RSSReader.handler
-      Runtime: nodejs18.x
       Environment:
         Variables:
           TABLE_NAME: !Ref Table
@@ -30,24 +30,15 @@ Resources:
           Properties:
             Schedule: rate(10 minutes)
             Enabled: true
-  Table:
-    Type: 'AWS::DynamoDB::Table'
-    Properties:
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-      BillingMode: PAY_PER_REQUEST
-      StreamSpecification:
-        StreamViewType: NEW_AND_OLD_IMAGES
-  TweetFunction:
+  ScheduleTweet:
     Type: 'AWS::Serverless::Function'
     Properties:
       CodeUri: .
-      Handler: src/TweetFunction.handler
-      Runtime: nodejs18.x
+      Handler: src/ScheduleTweet.handler
+      Environment:
+        Variables:
+          TWEET_FUNCTION_ARN: !GetAtt TweetFunction.Arn
+          TWEET_FUNCTION_ROLE_ARN: !GetAtt ScheulderRole.Arn
       Events:
         DynamoDBTrigger:
           Type: DynamoDB
@@ -62,6 +53,63 @@ Resources:
             - Sid: Statement1
               Effect: Allow
               Action:
+                - 'scheduler:CreateSchedule'
+              Resource:
+                - '*'
+        - Version: 2012-10-17
+          Statement:
+            - Sid: Statement2
+              Effect: Allow
+              Action:
+                - 'iam:PassRole'
+              Resource:
+                - !GetAtt ScheulderRole.Arn
+  TweetFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      CodeUri: .
+      Handler: src/TweetFunction.handler
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Sid: Statement1
+              Effect: Allow
+              Action:
                 - 'ssm:GetParameter'
               Resource:
-                - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/news-comics/*'
+                - !Sub >-
+                  arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/news-comics/*
+  Table:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+  ScheulderRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - scheduler.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: !Sub '${AWS::StackName}-scheduler-policy'
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'lambda:InvokeFunction'
+                Resource:
+                  - !GetAtt TweetFunction.Arn

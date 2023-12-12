@@ -10,7 +10,7 @@ const secrets = JSON.parse(secretsResponse.Parameter.Value);
 
 const twitterClient = new TwitterApi({
     appKey: secrets.appKey,
-    appSecret:  secrets.appSecret,
+    appSecret: secrets.appSecret,
     accessToken: secrets.accessToken,
     accessSecret: secrets.accessSecret
 }, {});
@@ -18,14 +18,8 @@ const twitterClient = new TwitterApi({
 const openai = new OpenAI({ apiKey: secrets.openaiKey });
 
 export async function handler(event) {
-    if (!event.Records[0].dynamodb.NewImage || event.Records[0].dynamodb.OldImage) {
-        return;
-    }
-    const item = event.Records[0].dynamodb.NewImage;
-    const title = item.title.S;
-    const link = item.link.S;
-    const tags = item.tags.S;
-    
+    const { title, link, tags } = event;
+
     const image = await openai.images.generate({
         prompt: `A comic strip for the following AWS annoucement: "${title}"`,
         model: "dall-e-3",
